@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="40" viewBox="0 0 170 40" role="img" aria-label="Listen on Apple Podcasts">
+  <rect width="170" height="40" rx="8" fill="#1A1A1F"/>
+  <text x="40" y="25" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="12">Listen on Apple Podcasts</text>
+  <circle cx="20" cy="20" r="10" fill="#A970FF"/>
+  <circle cx="20" cy="20" r="5" fill="#1A1A1F"/>
+  <circle cx="20" cy="20" r="2" fill="#A970FF"/>
+</svg>

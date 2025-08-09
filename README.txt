@@ -1,1 +1,1 @@
-Upload all files to repo root. Pages: main/(root). Calendly wired. Spotify/Apple embeds added. Subscribe opens mailto to perry.michael@icloud.com.
+Multi-page site. Upload all files to repo root; enable GitHub Pages. Edit podcast.html to replace YouTube video IDs.
