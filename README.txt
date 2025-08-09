@@ -1,1 +1,1 @@
-Multi-page site. Upload all files to repo root; enable GitHub Pages. Edit podcast.html to replace YouTube video IDs.
+v5: YouTube embeds set to user videos; Apple Podcasts full player restored. Upload all files to repo root and enable GitHub Pages.
