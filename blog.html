@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blog — Light Within The Void</title>
-  <meta name="description" content="Trauma-informed coaching, podcast, and resources for healing, self-acceptance, and honorable living."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="assets/logo-mark.jpeg">
-  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .blog-wrap{max-width:1120px;margin:0 auto;padding:60px 20px}
+    .posts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    .post-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column}
+    .post-card h3{font-family:'Playfair Display',serif;margin:0 0 8px}
+    .post-card .meta{color:var(--muted);font-size:14px;margin-bottom:10px}
+    .post-card a.btn.small{margin-top:auto;align-self:flex-start}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+    .empty{color:var(--muted)}
+    @media (max-width:1000px){.posts{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 <header class="site-header">
@@ -20,42 +26,66 @@
     </a>
     <button class="nav-toggle" aria-label="Open menu">☰</button>
     <ul class="nav-links">
-      <li><a href="about.html" class="">About</a></li>
-      <li><a href="coaching.html" class="">Coaching</a></li>
-      <li><a href="podcast.html" class="">Podcast</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="coaching.html">Coaching</a></li>
+      <li><a href="podcast.html">Podcast</a></li>
       <li><a href="blog.html" class="active">Blog</a></li>
-      <li><a href="testimonials.html" class="">Testimonials</a></li>
-      <li><a href="resources.html" class="">Resources</a></li>
-      <li><a href="shop.html" class="">Shop</a></li>
-      <li><a href="subscribe.html" class="btn small subscribe-cta ">Subscribe</a></li>
+      <li><a href="testimonials.html">Testimonials</a></li>
+      <li><a href="resources.html">Resources</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="subscribe.html" class="btn small subscribe-cta">Subscribe</a></li>
     </ul>
   </nav>
 </header>
 
-<section class="section container">
-  <h1 class="section-title"><span class="highlight">Blog</span></h1>
-  <div class="cards three">
-    <article class="card"><h3><span class="highlight">On</span> the Power of Surrender</h3><p>What surrender is (and isn't), and how to use it to unlock real movement.</p><a class="text-link" href="#">Read post →</a></article>
-    <article class="card"><h3><span class="highlight">Shadow</span> Work, Simplified</h3><p>A gentle, no-nonsense approach to meeting your shadow.</p><a class="text-link" href="#">Read post →</a></article>
-    <article class="card"><h3><span class="highlight">Authenticity</span> Without Performance</h3><p>Being real isn't a brand—it's a practice.</p><a class="text-link" href="#">Read post →</a></article>
+<main class="blog-wrap">
+  <div class="toolbar">
+    <h1 class="section-title"><span class="highlight">Latest</span> Posts</h1>
+    <a class="btn small" href="/admin/#/collections/blog/new" target="_blank" rel="noopener">New Post</a>
   </div>
-</section>
+  <div id="posts" class="posts"></div>
+  <p id="empty" class="empty" style="display:none">No posts yet—publish your first post in the <a href="/admin/" target="_blank" rel="noopener">CMS</a>.</p>
+</main>
 
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <div>
-      <strong>Light Within The Void</strong><br/>
-      <span class="muted">© <span id="year"></span> Michael Perry. All rights reserved.</span>
-    </div>
-    <div class="footer-links">
-      <a href="about.html">About</a>
-      <a href="coaching.html">Coaching</a>
-      <a href="podcast.html">Podcast</a>
-      <a href="resources.html">Resources</a>
-      <a href="shop.html">Shop</a>
-    </div>
-  </div>
-</footer>
+<script>
+const owner="ugubua", repo="lightwithinvoid", branch="main";
+async function listPosts() {
+  const listEl = document.getElementById('posts');
+  const emptyEl = document.getElementById('empty');
+  try {
+    const api = `https://api.github.com/repos/${owner}/${repo}/contents/blog?ref=${branch}`;
+    const res = await fetch(api, {cache:'no-store'});
+    if (!res.ok) throw new Error('List failed: '+res.status);
+    const files = await res.json();
+    // Keep only .md files
+    const md = files.filter(f=>f.type==='file' && f.name.endsWith('.md'));
+    // Derive title/date from filename or frontmatter later (here: from name)
+    const items = md.map(f=>({
+      name: f.name,
+      path: f.path,
+      url: f.download_url
+    }));
+    if (!items.length) { emptyEl.style.display='block'; return; }
+    // Sort by date if prefix YYYY-MM-DD-
+    items.sort((a,b)=>b.name.localeCompare(a.name)); // works with yyyy-mm-dd prefix
+    listEl.innerHTML = items.map(it=>{
+      const title = it.name.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}-?/, '').replace(/[-_]/g, ' ');
+      const dateMatch = it.name.match(/^(\d{4}-\d{2}-\d{2})/);
+      const date = dateMatch ? new Date(dateMatch[1]).toLocaleDateString() : '';
+      const link = 'post.html?p=/' + it.path;
+      return `<article class="post-card">
+        <h3><span class="highlight">${title.split(' ')[0]}</span> ${title.split(' ').slice(1).join(' ')}</h3>
+        <div class="meta">${date}</div>
+        <a class="btn small" href="${link}">Read more</a>
+      </article>`;
+    }).join('');
+  } catch(err) {
+    emptyEl.style.display='block';
+    console.error(err);
+  }
+}
+listPosts();
+</script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post — Light Within The Void</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .post-container{max-width:800px;margin:0 auto;padding:40px 20px}
+    .post-title{font-family:'Playfair Display',serif;font-size:40px;margin:0 0 8px}
+    .post-meta{color:var(--muted);margin-bottom:24px}
+    .post-body img{max-width:100%;border-radius:12px;border:1px solid var(--border)}
+    .post-body a{color:var(--text)}
+    .back-link{display:inline-block;margin-bottom:16px;text-decoration:none;color:var(--text)}
+    .loader{opacity:.7}
+    .error{color:#ffb3b3}
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <nav class="nav container">
+    <a href="index.html" class="brand">
+      <img src="assets/logo-mark.jpeg" alt="Light Within The Void mark" class="brand-logo">
+      <span>Light Within The Void</span>
+    </a>
+    <button class="nav-toggle" aria-label="Open menu">☰</button>
+    <ul class="nav-links">
+      <li><a href="about.html">About</a></li>
+      <li><a href="coaching.html">Coaching</a></li>
+      <li><a href="podcast.html">Podcast</a></li>
+      <li><a href="blog.html" class="active">Blog</a></li>
+      <li><a href="testimonials.html">Testimonials</a></li>
+      <li><a href="resources.html">Resources</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="subscribe.html" class="btn small subscribe-cta">Subscribe</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="post-container">
+  <a class="back-link" href="blog.html">← Back to Blog</a>
+  <div id="post" class="post-body loader">Loading post…</div>
+</main>
+
+<script>
+// Basic Markdown -> HTML converter (headings, bold, italic, links, images, lists, code)
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+}
+
+function mdToHtml(md) {
+  // Normalize line endings
+  md = md.replace(/\r\n?/g, '\n');
+
+  // Images ![alt](url)
+  md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
+
+  // Links [text](url)
+  md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // Code blocks ```
+  md = md.replace(/```([\s\S]*?)```/g, function(_, code){ return '<pre><code>'+escapeHtml(code)+'</code></pre>'; });
+
+  // Inline code `code`
+  md = md.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Headings ###### to #
+  for (let i=6;i>=1;i--) {
+    const re = new RegExp('^'+'#'.repeat(i)+'\s+(.+)$','gm');
+    md = md.replace(re, `<h${i}>$1</h${i}>`);
+  }
+
+  // Bold **text**
+  md = md.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Italic *text*
+  md = md.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  // Unordered lists
+  md = md.replace(/^(?:- |\* )(.*(?:\n(?:- |\* ).*)*)/gm, function(match) {
+    const items = match.split('\n').map(li => li.replace(/^(- |\* )/, '')).map(t => '<li>'+t+'</li>').join('');
+    return '<ul>'+items+'</ul>';
+  });
+
+  // Paragraphs: wrap loose lines that aren't HTML blocks
+  md = md.replace(/^(?!<h\d>|<ul>|<pre>|<img|<blockquote|<p>|<code|<ol|<div)(.+)$/gm, '<p>$1</p>');
+
+  return md;
+}
+
+function parseFrontmatter(md) {
+  // Very simple YAML frontmatter parser: ---\nkey: value\n---
+  const fmRe = /^---\n([\s\S]*?)\n---\n?/;
+  const m = md.match(fmRe);
+  const meta = {};
+  let body = md;
+  if (m) {
+    m[1].split(/\n/).forEach(line=>{
+      const idx = line.indexOf(':');
+      if (idx>0) {
+        const key=line.slice(0,idx).trim();
+        const val=line.slice(idx+1).trim().replace(/^"|"$|^'|'$/g,'');
+        meta[key]=val;
+      }
+    });
+    body = md.slice(m[0].length);
+  }
+  return {meta, body};
+}
+
+const params = new URLSearchParams(location.search);
+const file = params.get('p'); // expected like: /blog/2025-08-10-my-post.md
+const fallbackOwner = "ugubua";
+const fallbackRepo = "lightwithinvoid";
+const fallbackBranch = "main";
+
+async function loadPost() {
+  const el = document.getElementById('post');
+  if (!file) { el.textContent = 'No post specified.'; return; }
+  try {
+    const rawUrl = 'https://raw.githubusercontent.com/'+fallbackOwner+'/'+fallbackRepo+'/'+fallbackBranch+file;
+    const res = await fetch(rawUrl, {cache:'no-store'});
+    if (!res.ok) throw new Error('Fetch failed: '+res.status);
+    const md = await res.text();
+    const {meta, body} = parseFrontmatter(md);
+    const title = meta.title || file.split('/').pop().replace(/[-_]/g,' ').replace(/\.md$/, '');
+    const date = meta.date ? new Date(meta.date).toLocaleDateString() : '';
+    const html = mdToHtml(body);
+    el.classList.remove('loader');
+    el.innerHTML = `<h1 class="post-title"><span class="highlight">${title.split(' ')[0]}</span> ${title.split(' ').slice(1).join(' ')}</h1>`+
+                   (date ? `<div class="post-meta">${date}</div>` : '') +
+                   html;
+  } catch(err) {
+    el.classList.remove('loader');
+    el.classList.add('error');
+    el.textContent = 'Sorry, could not load this post.';
+    console.error(err);
+  }
+}
+
+loadPost();
+</script>
+<script src="script.js"></script>
+</body>
+</html>
