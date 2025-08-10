@@ -1,1 +1,1 @@
-v6: Hero logo backdrop + visible mark, capitalized headline, larger approach paragraph, subscribe button contrast, 'Coaching' card title.
+v7: Site-wide bottom-right logo background (subtle, monochrome), removed hero watermark, kept small hero logo, prior fixes included.
