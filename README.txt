@@ -1,1 +1,1 @@
-v5: YouTube embeds set to user videos; Apple Podcasts full player restored. Upload all files to repo root and enable GitHub Pages.
+v6: Hero logo backdrop + visible mark, capitalized headline, larger approach paragraph, subscribe button contrast, 'Coaching' card title.
