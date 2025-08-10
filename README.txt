@@ -1,1 +1,1 @@
-v7: Site-wide bottom-right logo background (subtle, monochrome), removed hero watermark, kept small hero logo, prior fixes included.
+v8 full: Site-wide centered background logo (fixed, slightly higher opacity), removed small hero logo. All v7 pages intact. Upload all files to repo root.
