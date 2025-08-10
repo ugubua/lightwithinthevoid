@@ -98,4 +98,14 @@ body::after{
 }
 
 /* v10 highlight first-word accent */
-.highlight{ color: var(--accent); }
+.highlight{ color: #d4af37; }
+
+/* v11: hero split layout with logo on the right */
+.landing-hero .container{ display:grid; grid-template-columns:1.2fr .8fr; gap:32px; align-items:center; }
+.hero-text{ }
+.hero-side-logo{ display:flex; align-items:center; justify-content:center; }
+.hero-side-logo img{ width: min(520px, 80%); max-height: 56vh; object-fit: contain; border-radius: 12px; }
+@media (max-width: 900px){
+  .landing-hero .container{ grid-template-columns:1fr; }
+  .hero-side-logo img{ width:min(440px, 92%); max-height: 36vh; margin-top:12px; }
+}
