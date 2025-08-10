@@ -83,3 +83,19 @@ body::after{
 }
 
 .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+
+/* v9 hero inline logo */
+.hero-logo-inline{
+  display:block;
+  width:min(680px, 70vw);
+  max-height: 46vh;
+  object-fit: contain;
+  margin: 26px auto 0;
+  opacity: .98;
+}
+@media (max-width: 900px){
+  .hero-logo-inline{ width:min(520px, 82vw); max-height: 36vh; }
+}
+
+/* v10 highlight first-word accent */
+.highlight{ color: var(--accent); }
