@@ -78,3 +78,12 @@ body::after{
   .landing-hero .container{ grid-template-columns:1fr; }
   .hero-side-logo img{ width:min(440px, 92%); max-height: 36vh; margin-top:12px; }
 }
+/* Post title styling */
+.post h1 { 
+  color: #fff;                 /* rest of the title is white */
+  margin-top: 0;
+}
+
+.post h1 .gold-text {
+  color: var(--accent);        /* your brand gold from :root */
+}
