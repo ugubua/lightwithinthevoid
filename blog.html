@@ -3,24 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog — Light Within The Void</title>
+  <title>Blog – Light Within The Void</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    .blog-wrap{max-width:1120px;margin:0 auto;padding:60px 20px}
-    .posts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-    .post-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column}
-    .post-card h3{font-family:'Playfair Display',serif;margin:0 0 8px}
-    .post-card .meta{color:var(--muted);font-size:14px;margin-bottom:10px}
-    .post-card a.btn.small{margin-top:auto;align-self:flex-start}
-    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
-    .empty{color:var(--muted)}
-    .thumb{width:100%;height:160px;overflow:hidden;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;background:#0f0f12}
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block;opacity:.95}
-    .excerpt{color:var(--muted);font-size:14px;margin:8px 0 10px}
-    @media (max-width:1000px){.posts{grid-template-columns:1fr}}
+    .blog-wrap { max-width: 1120px; margin: 0 auto; padding: 60px 20px; }
+    .posts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .post-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; }
+    .post-card h3 { font-family: 'Playfair Display', serif; margin: 0 0 8px; }
+    .post-card .meta { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+    .btn.small { margin-top: auto; text-align: center; }
+    .excerpt { color: var(--muted); font-size: 14px; margin: 8px 0 10px; }
+    @media (max-width: 1000px) { .posts { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
+
 <header class="site-header">
   <nav class="nav container">
     <a href="index.html" class="brand">
@@ -46,83 +43,28 @@
     <h1 class="section-title"><span class="highlight">Latest</span> Posts</h1>
     <a class="btn small" href="admin/#/collections/blog/new" target="_blank" rel="noopener">New Post</a>
   </div>
-  <div id="posts" class="posts"></div>
-  <p id="empty" class="empty" style="display:none">No posts yet—publish your first post in the <a href="admin/" target="_blank" rel="noopener">CMS</a>.</p>
+
+  <div id="posts" class="posts">
+    <!-- New post card -->
+    <article class="post-card">
+      <h3>
+        <a href="blog/from-stagnation-to-meaning.html">
+          From Stagnation to Meaning: A Practical Guide to Finding Purpose
+        </a>
+      </h3>
+      <div class="meta">August 11, 2025 • Purpose, Self-development</div>
+      <p class="excerpt">
+        Practical prompts and perspective shifts to move from stagnation to a life aligned with your values.
+      </p>
+      <a class="btn small" href="blog/from-stagnation-to-meaning.html">Read more</a>
+    </article>
+  </div>
+
+  <div id="empty" class="empty" style="display:none">
+    No posts yet — publish your first post in the <a href="admin/" target="_blank" rel="noopener">admin</a>.
+  </div>
 </main>
 
-<script>
-const owner="ugubua", repo="lightwithinvoid", branch="main";
-
-function parseFrontmatter(md){
-  const fmRe = /^---\n([\s\S]*?)\n---\n?/;
-  const m = md.match(fmRe);
-  const meta = {};
-  let body = md;
-  if (m){
-    m[1].split(/\n/).forEach(line=>{
-      const idx = line.indexOf(':');
-      if (idx>0){
-        const key=line.slice(0,idx).trim();
-        const val=line.slice(idx+1).trim().replace(/^"|"$|^'|'$/g,'');
-        meta[key]=val;
-      }
-    });
-    body = md.slice(m[0].length);
-  }
-  return {meta, body};
-}
-
-async function listPosts(){
-  const listEl = document.getElementById('posts');
-  const emptyEl = document.getElementById('empty');
-  try{
-    const api = `https://api.github.com/repos/${owner}/${repo}/contents/blog?ref=${branch}`;
-    const res = await fetch(api, {cache:'no-store'});
-    if(!res.ok) throw new Error('List failed: '+res.status);
-    const files = await res.json();
-    const md = files.filter(f=>f.type==='file' && f.name.endsWith('.md'));
-    if (!md.length){ emptyEl.style.display='block'; return; }
-
-    md.sort((a,b)=>b.name.localeCompare(a.name));
-
-    const items = await Promise.all(md.map(async f=>{
-      const raw = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${f.path}`;
-      try{
-        const r = await fetch(raw, {cache:'no-store'});
-        const txt = await r.text();
-        const {meta} = parseFrontmatter(txt);
-        const title = meta.title || f.name.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}-?/, '').replace(/[-_]/g,' ');
-        const date = meta.date ? new Date(meta.date).toLocaleDateString() :
-                    (f.name.match(/^(\d{4}-\d{2}-\d{2})/) ? new Date(RegExp.$1).toLocaleDateString() : '');
-        const image = meta.image || '';
-        const excerpt = meta.excerpt || '';
-        return {title, date, image, excerpt, path: f.path};
-      }catch(e){
-        return {title: f.name, date:'', image:'', excerpt:'', path: f.path};
-      }
-    }));
-
-    listEl.innerHTML = items.map(it=>{
-      const link = 'post.html?p=/' + it.path;
-      const parts = it.title.split(' ');
-      const first = parts.shift(); const rest = parts.join(' ');
-      const imgTag = it.image ? `<div class="thumb"><img src="${it.image}" alt=""></div>` : '';
-      const ex = it.excerpt ? `<p class="excerpt">${it.excerpt}</p>` : '';
-      return `<article class="post-card">
-        ${imgTag}
-        <h3><span class="highlight">${first}</span> ${rest}</h3>
-        <div class="meta">${it.date || ''}</div>
-        ${ex}
-        <a class="btn small" href="${link}">Read more</a>
-      </article>`;
-    }).join('');
-  }catch(err){
-    emptyEl.style.display='block';
-    console.error(err);
-  }
-}
-listPosts();
-</script>
 <script src="script.js"></script>
 </body>
 </html>
