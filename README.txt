@@ -1,1 +1,1 @@
-v8 full: Site-wide centered background logo (fixed, slightly higher opacity), removed small hero logo. All v7 pages intact. Upload all files to repo root.
+v15 full: blog list with featured images & excerpts, relative admin link, Netlify CMS configured, hero logo right, gold highlights, watermark background.

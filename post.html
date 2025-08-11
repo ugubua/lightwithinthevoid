@@ -43,100 +43,44 @@
 </main>
 
 <script>
-// Basic Markdown -> HTML converter (headings, bold, italic, links, images, lists, code)
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
-}
-
-function mdToHtml(md) {
-  // Normalize line endings
-  md = md.replace(/\r\n?/g, '\n');
-
-  // Images ![alt](url)
-  md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
-
-  // Links [text](url)
-  md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-  // Code blocks ```
-  md = md.replace(/```([\s\S]*?)```/g, function(_, code){ return '<pre><code>'+escapeHtml(code)+'</code></pre>'; });
-
-  // Inline code `code`
-  md = md.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  // Headings ###### to #
-  for (let i=6;i>=1;i--) {
-    const re = new RegExp('^'+'#'.repeat(i)+'\s+(.+)$','gm');
-    md = md.replace(re, `<h${i}>$1</h${i}>`);
-  }
-
-  // Bold **text**
-  md = md.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  // Italic *text*
-  md = md.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
-  // Unordered lists
-  md = md.replace(/^(?:- |\* )(.*(?:\n(?:- |\* ).*)*)/gm, function(match) {
-    const items = match.split('\n').map(li => li.replace(/^(- |\* )/, '')).map(t => '<li>'+t+'</li>').join('');
-    return '<ul>'+items+'</ul>';
-  });
-
-  // Paragraphs: wrap loose lines that aren't HTML blocks
-  md = md.replace(/^(?!<h\d>|<ul>|<pre>|<img|<blockquote|<p>|<code|<ol|<div)(.+)$/gm, '<p>$1</p>');
-
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function mdToHtml(md){
+  md = md.replace(/\r\n?/g,'\n');
+  md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img alt="$1" src="$2">');
+  md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  md = md.replace(/```([\s\S]*?)```/g,(_,code)=>'<pre><code>'+escapeHtml(code)+'</code></pre>');
+  md = md.replace(/`([^`]+)`/g,'<code>$1</code>');
+  for (let i=6;i>=1;i--){const re=new RegExp('^'+'#'.repeat(i)+'\s+(.+)$','gm'); md=md.replace(re,`<h${i}>$1</h${i}>`);}
+  md = md.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  md = md.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  md = md.replace(/^(?:- |\* )(.*(?:\n(?:- |\* ).*)*)/gm, m=>'<ul>'+m.split('\n').map(li=>li.replace(/^(- |\* )/,'')).map(t=>'\n<li>'+t+'</li>').join('')+'\n</ul>');
+  md = md.replace(/^(?!<h\d>|<ul>|<pre>|<img|<blockquote|<p>|<code|<ol|<div)(.+)$/gm,'<p>$1</p>');
   return md;
 }
-
-function parseFrontmatter(md) {
-  // Very simple YAML frontmatter parser: ---\nkey: value\n---
-  const fmRe = /^---\n([\s\S]*?)\n---\n?/;
-  const m = md.match(fmRe);
-  const meta = {};
-  let body = md;
-  if (m) {
-    m[1].split(/\n/).forEach(line=>{
-      const idx = line.indexOf(':');
-      if (idx>0) {
-        const key=line.slice(0,idx).trim();
-        const val=line.slice(idx+1).trim().replace(/^"|"$|^'|'$/g,'');
-        meta[key]=val;
-      }
-    });
-    body = md.slice(m[0].length);
-  }
+function parseFrontmatter(md){
+  const fmRe=/^---\n([\s\S]*?)\n---\n?/; const m=md.match(fmRe); const meta={}; let body=md;
+  if(m){m[1].split(/\n/).forEach(line=>{const idx=line.indexOf(':'); if(idx>0){const k=line.slice(0,idx).trim(); const v=line.slice(idx+1).trim().replace(/^"|"$|^'|'$/g,''); meta[k]=v;}}); body=md.slice(m[0].length);}
   return {meta, body};
 }
-
-const params = new URLSearchParams(location.search);
-const file = params.get('p'); // expected like: /blog/2025-08-10-my-post.md
-const fallbackOwner = "ugubua";
-const fallbackRepo = "lightwithinvoid";
-const fallbackBranch = "main";
-
-async function loadPost() {
-  const el = document.getElementById('post');
-  if (!file) { el.textContent = 'No post specified.'; return; }
-  try {
-    const rawUrl = 'https://raw.githubusercontent.com/'+fallbackOwner+'/'+fallbackRepo+'/'+fallbackBranch+file;
-    const res = await fetch(rawUrl, {cache:'no-store'});
-    if (!res.ok) throw new Error('Fetch failed: '+res.status);
-    const md = await res.text();
-    const {meta, body} = parseFrontmatter(md);
-    const title = meta.title || file.split('/').pop().replace(/[-_]/g,' ').replace(/\.md$/, '');
-    const date = meta.date ? new Date(meta.date).toLocaleDateString() : '';
+const params = new URLSearchParams(location.search); const file = params.get('p');
+async function loadPost(){
+  const el=document.getElementById('post');
+  if(!file){el.textContent='No post specified.'; return;}
+  try{
+    const raw = 'https://raw.githubusercontent.com/ugubua/lightwithinvoid/main'+file;
+    const res = await fetch(raw, {cache:'no-store'});
+    if(!res.ok) throw new Error('Fetch failed '+res.status);
+    const md = await res.text(); const {meta, body}=parseFrontmatter(md);
+    const title=(meta.title||file.split('/').pop().replace(/[-_]/g,' ').replace(/\.md$/,''));
+    const date = meta.date? new Date(meta.date).toLocaleDateString():'';
     const html = mdToHtml(body);
+    const parts=title.split(' '); const first=parts.shift(); const rest=parts.join(' ');
     el.classList.remove('loader');
-    el.innerHTML = `<h1 class="post-title"><span class="highlight">${title.split(' ')[0]}</span> ${title.split(' ').slice(1).join(' ')}</h1>`+
-                   (date ? `<div class="post-meta">${date}</div>` : '') +
-                   html;
-  } catch(err) {
-    el.classList.remove('loader');
-    el.classList.add('error');
-    el.textContent = 'Sorry, could not load this post.';
-    console.error(err);
+    el.innerHTML = `<h1 class="post-title"><span class="highlight">${first}</span> ${rest}</h1>`+(date?`<div class="post-meta">${date}</div>`:'')+html;
+  }catch(e){
+    el.classList.remove('loader'); el.classList.add('error'); el.textContent='Sorry, could not load this post.'; console.error(e);
   }
 }
-
 loadPost();
 </script>
 <script src="script.js"></script>
